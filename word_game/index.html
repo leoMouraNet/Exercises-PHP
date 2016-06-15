@@ -2,14 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">  
-    <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
     <title>Word Game</title>
-    <!-- Latest compiled and minified CSS -->
+    <!-- Latest compiled Bootstrap minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
     <style>
@@ -33,6 +27,7 @@
 <body role="document">
 <button onclick="startGame()" class="btn btn-success">Start</button>
 <input type="text" id="formText" onKeyPress="checkWord()" onKeyUp="checkWord()"> 
+
 <div class="row" style="width:400px;">
   <div class="col-xs-6 col-md-4 text-success" id="divScore">Score: 0</div>
   <div class="col-xs-6 col-md-4 text-danger" id="divLife">Life: 3</div>
@@ -40,99 +35,110 @@
 </div>
 
 <div id ="container">
-<div id ="animate">WORD</div>
+  <div id ="animate">WORD</div>
 </div>
-<script>
-  var wordList;
-  var word = "";
-  var life = 3;
-  var score = 0;
-  var idInterval;
-  var level = 1;
 
+<script>
+  //create variables
+  var wordList; //Array WordList -> To receive all words from database
+  var word = ""; //To choice one word from array list
+  var life = 3; //To control how many Lifes
+  var score = 0; //To compute score
+  var idInterval; //To set interval function (animation)
+  var level = 1; //To check level
+
+  //Function to GetWordList receiving Level as a parameter
   function getWordList(level) {
+    //will request json from php
     var xmlhttp = new XMLHttpRequest();
     var url = "http://localhost/exercises/word_game/word.php?level=" + level;
 
     xmlhttp.onreadystatechange=function() {
+        //if all file was load it
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            wordList = JSON.parse(xmlhttp.responseText);
-            clearInterval(idInterval);
-            getNewWord();
-            updateDiv();
-            wordMove();
+            wordList = JSON.parse(xmlhttp.responseText); //get the Json and insert on array list
+            clearInterval(idInterval); //Clear interval to Stop dropping the word
+            getNewWord(); //Get an randon word for array list
+            updateDiv(); //Update Divs on screen
+            wordMove(); //Starting moving the new word down
         }
     }
     xmlhttp.open("GET", url, true);
     xmlhttp.send();  
   }
   
+  //Function to get a New Word
   function getNewWord() {
-    word = wordList[Math.floor((Math.random() * wordList.length))];
-    document.getElementById("animate").innerHTML = word;
+    word = wordList[Math.floor((Math.random() * wordList.length))]; //set the word variavel with a randon from wordList
+    document.getElementById("animate").innerHTML = word; //Update the drop animate div with this word
   }
 
+  //Function to check if the word typed is the same on div
   function checkWord() {
     var text = document.getElementById("formText");
     if (text.value.toLowerCase()==word.toLowerCase()) {
-      win();
+      win(); //If is the same word call Win Function
     }
   }
 
+  //Function to move the word down
   function wordMove() {
-    var elem = document.getElementById("animate");   
+    var elem = document.getElementById("animate");   //get div ID animate
     var pos = 0;
-    var timer = 10 - level;
-    idInterval = setInterval(frame, timer);
+    var timer = 10 - level; //set timer to control the speed. Decrease number to increase the speed
+    idInterval = setInterval(frame, timer); //set Interval to execute the function frame() on looping on timer millisecs
+    //Function to be executed on looping and create the animation
     function frame() {
-      if (pos == 350) {
-        lose();
-      } else {
+      if (pos == 350) { //if the word hit the botton
+        lose(); //call function lose
+      } else { //if not, call a new position and move the word to down
         pos++; 
         elem.style.top = pos + 'px'; 
       }
-    }
+    } //this function will stay in looping until someone clear the interval
   }
 
+  //Function to start a new game
   function startGame() {
+    //reset the variables
     life = 3;
     word = "";
     score = 0;
     level = 1;
-    getWordList(level);
+    getWordList(level); //Update Word List
   }
 
   function win() {
-    clearInterval(idInterval);
-    score += 1;
-    if (score%10==0) {
+    clearInterval(idInterval); //Stop animation
+    score += 1; //increase score
+    if (score%10==0) { //if score is divided by 10 so level up
       levelUP();
     } else {
-      getNewWord();
-      updateDiv();
-      wordMove();  
+      getNewWord(); //get new word
+      updateDiv(); //Update Divs on screen
+      wordMove();  //Start word animation
     }
   }
 
   function lose() {
-    clearInterval(idInterval);
-    life--;
-    if (life!=0) {
-      getNewWord();
-      updateDiv();
-      wordMove(); 
+    clearInterval(idInterval); //Stop animation
+    life--; //reduce life
+    if (life>0) { //if life > 0
+      getNewWord(); //get new word
+      updateDiv(); //Update Divs on screen
+      wordMove();  //Start word animation
     } else {
-      updateDiv();
-      alert('Game Over');
+      updateDiv(); //Update Divs on screen
+      alert('Game Over'); //Alert Game Over
     }
   }
 
   function levelUP(){
-    level++;
-    life++;
-    updateDiv();
-    alert('Level Up');
-    getWordList(level);
+    level++; //increase level
+    life++; //increase life
+    updateDiv(); //Update Divs on screen
+    alert('Level Up'); //alert Level Up
+    getWordList(level); //update Word List with a new level
   }
 
   function updateDiv(){
